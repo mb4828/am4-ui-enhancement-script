@@ -4,15 +4,15 @@
 - [📖 Introduction](#introduction)
 - [⚙️ Installation](#installation)
 - [✨ Features](#features)
-  - [🎨 Custom Liveries](#🎨-custom-liveries)
-  - [✈️ Order Screen Enhancements](#✈️-order-screen-enhancements)
-  - [🔔 Browser Notifications](#🔔-browser-notifications)
-  - [⛽️ Better Fuel and Co2 Tooltip](#⛽️-better-fuel-and-co2-tooltip)
-  - [💰 Better Auto Price](#💰-better-auto-price)
-  - [🔈 Immersive Sounds](#🔈-immersive-sounds)
-  - [🚫 Hide Game Ads](#🚫-hide-game-ads)
+  - [🎨 Custom Liveries](#-custom-liveries)
+  - [✈️ Order Screen Enhancements](#-order-screen-enhancements)
+  - [🔔 Browser Notifications](#-browser-notifications)
+  - [⛽️ Better Fuel and Co2 Tooltip](#-better-fuel-and-co2-tooltip)
+  - [💰 Better Auto Price](#-better-auto-price)
+  - [🔈 Immersive Sounds](#-immersive-sounds)
+  - [🚫 Hide Game Ads](#-hide-game-ads)
 - [💖 Support](#support)
-- [📄 Legal](#📄-legal)
+- [📄 Legal](#legal)
 
 ## Introduction
 The **AM4 UI Enhancement Script** is your co-pilot for Airline Manager 4, with both **U**sability and **I**mmersion improvements to the game.
@@ -106,12 +106,12 @@ I may add more in the future &mdash; I don't want it to be too annoying.
 ### 🚫 Hide Game Ads
 Removes annoying advertisements for other games from the interface.
 
-## 💖 Support
+## Support
 Bugs or feature requests can be raised through [GitHub](https://github.com/mb4828/am4-ui-enhancement-script/issues). I sadly don't have time to respond to issues raised elsewhere (Reddit, Discord, etc).
 
 Pull requests are always welcome!
 
-## 📄 Legal
+## Legal
 
 Copyright &copy; 2025 Matt Brauner
 
