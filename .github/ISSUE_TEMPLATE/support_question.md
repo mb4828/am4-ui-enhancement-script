@@ -7,6 +7,7 @@ assignees: ''
 
 ---
 
-**Have you checked to see if this question was already asked?** Yes/No
+**Have you checked to see if this question was already asked?**
+Yes/No
 
 **What is your question?**
