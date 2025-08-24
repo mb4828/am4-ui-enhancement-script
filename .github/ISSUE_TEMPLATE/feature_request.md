@@ -7,7 +7,8 @@ assignees: ''
 
 ---
 
-**Have you checked to see if your feature request was already raised?** Yes/No
+**Have you checked to see if your feature request was already raised?**
+- [ ] Yes
 
 **Is your feature request related to a problem? Please describe.**
 A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
