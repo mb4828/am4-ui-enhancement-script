@@ -4,11 +4,11 @@
 - [📖 Introduction](#introduction)
 - [⚙️ Installation](#installation)
 - [✨ Features](#features)
-  - [💰 Better Auto Price](#💰-better-auto-price)
   - [🎨 Custom Liveries](#🎨-custom-liveries)
   - [✈️ Order Screen Enhancements](#✈️-order-screen-enhancements)
-  - [⛽️ Fuel and Co2 Tooltip Enhancement](#⛽️-fuel-and-co2-tooltip-enhancement)
   - [🔔 Browser Notifications](#🔔-browser-notifications)
+  - [⛽️ Better Fuel and Co2 Tooltip](#⛽️-better-fuel-and-co2-tooltip)
+  - [💰 Better Auto Price](#💰-better-auto-price)
   - [🔈 Immersive Sounds](#🔈-immersive-sounds)
   - [🚫 Hide Game Ads](#🚫-hide-game-ads)
 - [💖 Support](#support)
@@ -46,12 +46,6 @@ Additionally, AM4-UI does not collect any personal data or access files on your 
 
 ## Features
 
-### 💰 Better Auto Price
-
-<img src="images/better_auto.png" alt="custom-livery" style="max-width:600px" />
-
-Automatically applies recommended multipliers (1.1, 1.08, 1.06) to the auto price button, boosting profit.
-
 ### 🎨 Custom Liveries
 
 <img src="images/custom-livery.png" alt="custom-livery" style="max-width:600px" />
@@ -61,6 +55,8 @@ Allows you to override default aircraft images with custom liveries.
 To use, click on any aircraft picture and enter a URL to the image you'd like to replace it with.
 
 To remove a custom image, click on the aircraft and enter a blank URL.
+
+For help creating liveries, see my guide [here](https://github.com/mb4828/am4-ui-enhancement-script/wiki/How-to-make-a-custom-aircraft-livery-using-Pixlr).
 
 Caveats:
 1. Only works on your device and is not visible to other players.
@@ -79,12 +75,6 @@ Includes the following improvements to the order screen:
 - Adds filtering to show all, favorites, or only affordable aircraft.
 - Adds sorting to organize aircraft by desired stats (e.g., cost, capacity, range).
 
-### ⛽️ Fuel and Co2 Tooltip Enhancement
-
-<img src="images/navbar_tooltip.png" alt="tooltip" style="max-width:250px" />
-
-The Fuel and Co2 popup now shows the fuel and Co2 levels without having to open the fuel page.
-
 ### 🔔 Browser Notifications
 
 <img src="images/notification.png" alt="notification" style="max-width:350px" />
@@ -92,6 +82,18 @@ The Fuel and Co2 popup now shows the fuel and Co2 levels without having to open 
 Displays browser notifications when aircraft land or park, allowing you to work on other tasks without missing anything. If your sound is on, a ding will also be played.
 
 To enable, click "Allow" when the popup appears asking if you want to permit notifications.
+
+### ⛽️ Better Fuel and Co2 Tooltip
+
+<img src="images/navbar_tooltip.png" alt="tooltip" style="max-width:250px" />
+
+The Fuel and Co2 popup now shows the fuel and Co2 levels without having to open the fuel page.
+
+### 💰 Better Auto Price
+
+<img src="images/better_auto.png" alt="custom-livery" style="max-width:600px" />
+
+Automatically applies recommended multipliers (1.1, 1.08, 1.06) to the auto price button, boosting profit. Not a substitute for the Discord bot, but maybe someone can help make this better in the future.
 
 ### 🔈 Immersive Sounds
 Adds the following sound effects:
