@@ -8,6 +8,6 @@ assignees: ''
 ---
 
 **Have you checked to see if this question was already asked?**
-Yes/No
+- [ ] Yes
 
 **What is your question?**
