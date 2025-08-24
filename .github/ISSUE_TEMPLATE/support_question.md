@@ -1,5 +1,5 @@
 ---
-name: Support question
+name: ℹ️ Support question
 about: Ask a question or request support
 title: ''
 labels: 'question'
