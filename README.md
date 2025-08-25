@@ -23,9 +23,13 @@ AM4-UI is an free, open source [userscript](https://en.wikipedia.org/wiki/Usersc
 
 ### What This Isn't
 
-AM4-UI is not a bot. It does not automate any functions of the game. Automation and bots go against the spirit of AM4 and are prohibited by the Terms of Service. While this script does not fall under those categories, you should use it at your own risk. 
+AM4-UI is not a bot. It does not automate any functions of the game or facilitate cheating. Automation and bots go against the spirit of AM4 and are prohibited by the Terms of Service.
 
 Additionally, AM4-UI does not collect any personal data or access files on your computer.
+
+### How It Works
+
+The script is a [mod](https://en.wikipedia.org/wiki/Video_game_modding) built in JavaScript. It makes changes to the game's UI in your browser *only*. These changes do not affect other users of the game, impact the game's servers, or enable automation or cheating. Should anyone from Trophy Games reach out, I am happy to make any changes or alterations that they request.
 
 ### Support Me
 
@@ -79,7 +83,7 @@ Includes the following improvements to the order screen:
 
 <img src="images/notification.png" alt="notification" style="max-width:350px" />
 
-Displays browser notifications when aircraft land or park, allowing you to work on other tasks without missing anything. If your sound is on, a ding will also be played.
+Displays browser notifications when aircraft land or park, allowing you to work on other tasks without missing anything. If your sound is on, a ding will also be played. This mirrors the notifcations you'd receive when playing via the mobile app, bringing them to desktop.
 
 To enable, click "Allow" when the popup appears asking if you want to permit notifications.
 
@@ -104,7 +108,7 @@ Adds the following sound effects:
 I may add more in the future &mdash; I don't want it to be too annoying.
 
 ### 🚫 Hide Game Ads
-Removes annoying advertisements for other games from the interface.
+Removes advertisements for other games from the interface. As a paying player, I'd prefer not to be advertised to.
 
 ## Support
 Bugs or feature requests can be raised through [GitHub](https://github.com/mb4828/am4-ui-enhancement-script/issues). I sadly don't have time to respond to issues raised elsewhere (Reddit, Discord, etc).
