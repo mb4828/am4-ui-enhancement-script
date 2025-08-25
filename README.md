@@ -15,21 +15,19 @@
 - [📄 Legal](#legal)
 
 ## Introduction
-The **AM4 UI Enhancement Mod** is your co-pilot for Airline Manager 4, with both **U**sability and **I**mmersion improvements to the game.
+The **AM4 UI Enhancement Mod** is your co-pilot for Airline Manager 4, with both **U**sability and **I**mmersion improvements to the game's UI.
 
 ### What This Is
 
-AM4-UI is an free, open source [userscript](https://en.wikipedia.org/wiki/Userscript) designed to improve quality-of-life within the game as well as realism and roleplay potential. I've opted for a userscript to maximize compatibility across devices and browsers and save on development time. However, since userscripts only work in the browser, this means that **AM4-UI is only compatible with the web version of the game, not the mobile app**. 
+AM4-UI is an free, open source [mod](https://en.wikipedia.org/wiki/Video_game_modding) designed to improve quality-of-life within the game as well as realism and roleplay potential. I've opted for a [userscript](https://en.wikipedia.org/wiki/Userscript) to maximize compatibility across devices and browsers and save on development time. However, since userscripts only work in the browser, this means that **AM4-UI is only compatible with the web version of the game, not the mobile app**. 
 
 ### What This Isn't
 
-AM4-UI is not a bot. It does not automate any functions of the game or facilitate cheating. Automation and bots go against the spirit of AM4 and are prohibited by the Terms of Service.
-
-Additionally, AM4-UI does not collect any personal data or access files on your computer.
+AM4-UI is **not a bot**. It does not automate any functions of the game, play for you, or facilitate cheating or exploits. Additionally, AM4-UI does not collect any personal data or access files on your computer.
 
 ### How It Works
 
-The script is a [mod](https://en.wikipedia.org/wiki/Video_game_modding) built in JavaScript. It makes changes to the game's UI in your browser *only*. These changes do not affect other users of the game, impact the game's servers, or enable automation or cheating. Should anyone from Trophy Games reach out, I am happy to make any changes or alterations that they request.
+AM4-UI is written in JavaScript. It makes alterations to the game's UI in your browser *only*. These changes do not affect other users of the game or impact the game's servers or infrastructure in any way. This is why the Custom Livery feature only works for you on your current device.
 
 ### Support Me
 
@@ -52,8 +50,6 @@ The script is a [mod](https://en.wikipedia.org/wiki/Video_game_modding) built in
 
 ### 🎨 Custom Liveries
 
-<img src="images/custom-livery.png" alt="custom-livery" style="max-width:600px" />
-
 Allows you to override default aircraft images with custom liveries.
 
 To use, click on any aircraft picture and enter a URL to the image you'd like to replace it with.
@@ -70,8 +66,6 @@ Caveats:
 
 ### ✈️ Order Screen Enhancements
 
-<img src="images/order-screen.png" alt="order screen" style="max-width:600px" />
-
 Includes the following improvements to the order screen:
 - Cleans up the list of stats to make it more readable
 - Adds the ability to Favorite aircraft.
@@ -81,21 +75,15 @@ Includes the following improvements to the order screen:
 
 ### 🔔 Browser Notifications
 
-<img src="images/notification.png" alt="notification" style="max-width:350px" />
-
-Displays browser notifications when aircraft land or park, allowing you to work on other tasks without missing anything. If your sound is on, a ding will also be played. This mirrors the notifcations you'd receive when playing via the mobile app, bringing them to desktop.
+Displays browser notifications when aircraft land or park, allowing you to work on other tasks without missing anything. If your sound is on, a ding will also be played. This feature is already part of the AM4 mobile app &mdash; now it's available on desktop.
 
 To enable, click "Allow" when the popup appears asking if you want to permit notifications.
 
 ### ⛽️ Better Fuel and Co2 Tooltip
 
-<img src="images/navbar_tooltip.png" alt="tooltip" style="max-width:250px" />
-
-The Fuel and Co2 popup now shows the fuel and Co2 levels without having to open the fuel page.
+The Fuel and Co2 popup now shows the fuel and Co2 levels without having to open the fuel page. Just mouse over the fuel/Co2 gauge in the menu bar.
 
 ### 💰 Better Auto Price
-
-<img src="images/better_auto.png" alt="custom-livery" style="max-width:600px" />
 
 Automatically applies recommended multipliers (1.1, 1.08, 1.06) to the auto price button, boosting profit. Not a substitute for the Discord bot, but maybe someone can help make this better in the future.
 
@@ -108,7 +96,7 @@ Adds the following sound effects:
 I may add more in the future &mdash; I don't want it to be too annoying.
 
 ### 🚫 Hide Game Ads
-Removes advertisements for other games from the interface. As a paying player, I'd prefer not to be advertised to.
+Removes advertisements for other games from the interface. As someone who has paid money for the game, I'd prefer not to see ads.
 
 ## Support
 Bugs or feature requests can be raised through [GitHub](https://github.com/mb4828/am4-ui-enhancement-script/issues). I sadly don't have time to respond to issues raised elsewhere (Reddit, Discord, etc).
