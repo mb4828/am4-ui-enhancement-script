@@ -1,4 +1,4 @@
-# Airline Manager 4 (AM4) UI Enhancement Script
+# Airline Manager 4 (AM4) UI Enhancement Mod
 
 ## Table of Contents
 - [📖 Introduction](#introduction)
@@ -15,7 +15,7 @@
 - [📄 Legal](#legal)
 
 ## Introduction
-The **AM4 UI Enhancement Script** is your co-pilot for Airline Manager 4, with both **U**sability and **I**mmersion improvements to the game.
+The **AM4 UI Enhancement Mod** is your co-pilot for Airline Manager 4, with both **U**sability and **I**mmersion improvements to the game.
 
 ### What This Is
 
