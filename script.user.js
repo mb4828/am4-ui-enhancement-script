@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AM4 UI Enhancements
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.1
 // @description  Usability and Immersion improvements for Airline Manager 4
 // @author       matt@mattbrauner.com
 // @match        https://www.airlinemanager.com/*
@@ -50,9 +50,9 @@ function betterAutoPrice() {
     const args = cmd.slice(cmd.indexOf('(') + 1, cmd.indexOf(')')).split(',');
 
     // adjust first 3 args by multipliers
-    args[0] = Math.floor(args[0] * 1.1) - 10;
-    args[1] = Math.floor(args[1] * 1.08) - 10;
-    args[2] = Math.floor(args[2] * 1.06) - 10;
+    args[0] = Math.floor(args[0] * 1.1) - 1;
+    args[1] = Math.floor(args[1] * 1.08) - 1;
+    args[2] = Math.floor(args[2] * 1.06) - 1;
 
     // set new onclick with adjusted args
     autoPriceButton.setAttribute('onclick', `${functionName}(${args.join(',')})`);
