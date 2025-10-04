@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AM4 UI Enhancements
 // @namespace    http://tampermonkey.net/
-// @version      1.1
+// @version      1.2
 // @description  Usability and Immersion improvements for Airline Manager 4
 // @author       matt@mattbrauner.com
 // @match        https://www.airlinemanager.com/*
@@ -204,7 +204,6 @@ function orderScreenEnhancements() {
   });
 
   // Better controls
-
   let controls = document.getElementById('order-controls');
   if (!controls) {
     controls = document.createElement('div');
@@ -279,11 +278,7 @@ function orderScreenEnhancements() {
     sortSelect.addEventListener('change', () => {
       const [key, direction] = sortSelect.value.split('-');
       if (!key) return;
-      const sortedOrders = Array.from(orders).sort((a, b) => {
-        const valA = parseFloat(a.dataset[key]) || 0;
-        const valB = parseFloat(b.dataset[key]) || 0;
-        return direction === 'asc' ? valA - valB : valB - valA;
-      });
+      const sortedOrders = sortElementsByDataset(Array.from(orders), key, direction);
       sortedOrders.forEach((order) => {
         order.parentElement.appendChild(order);
       });
@@ -291,6 +286,108 @@ function orderScreenEnhancements() {
     controls.appendChild(sortSelect);
 
     acListDetail.prepend(controls);
+  }
+}
+
+/** Hub screen enhancements */
+function hubScreenEnhancements() {
+  const hubId = document
+    .querySelectorAll('#hubDetail .col-6.text-center.p-2.font-weight-bold')[1]
+    ?.textContent.split('/')[0];
+  if (!hubId) return;
+
+  const routes = document.querySelectorAll('tr:not(#demandView tr)');
+  routes.forEach((route) => {
+    if (route.dataset.distance) return; // Already processed
+
+    // Extract and store route specs as data attributes
+    const distanceElem = route.querySelector('.s-text')?.textContent.match(/([\d,]+)\s*km/) ?? '';
+    const flightNumberElem = route.querySelector('b');
+    const aircraftIdElem = route.querySelector('a[onclick*="fleet_details.php?id="]');
+    const demandRegex = /Demand:\s*(\d+[\d,]*)\s*\/\s*(\d+[\d,]*)\s*\/\s*(\d+[\d,]*)/;
+    const demandElem = Array.from(route.querySelectorAll('.s-text')).find((el) => demandRegex.test(el.textContent));
+    const demandMatch = demandElem ? demandElem.textContent.match(demandRegex) : null;
+    const demand = demandMatch
+      ? {
+          economy: parseInt(demandMatch[1].replace(/,/g, '')) || 0,
+          business: parseInt(demandMatch[2].replace(/,/g, '')) || 0,
+          first: parseInt(demandMatch[3].replace(/,/g, '')) || 0,
+        }
+      : { economy: 0, business: 0, first: 0 };
+    const totalDemand = demand.economy + demand.business + demand.first;
+
+    const specs = {
+      distance: distanceElem ? parseInt(distanceElem[1].replace(/,/g, '')) : 0,
+      flightNumber: flightNumberElem ? flightNumberElem.textContent.trim().slice(1) : '',
+      aircraftId: aircraftIdElem ? aircraftIdElem.textContent.trim() : '',
+      demandEconomy: demand.economy,
+      demandBusiness: demand.business,
+      demandFirst: demand.first,
+      totalDemand: totalDemand,
+    };
+    Object.entries(specs).forEach(([key, value]) => {
+      route.dataset[key] = value;
+    });
+  });
+
+  // Controls
+  const controlsId = `hub-controls-${hubId}`;
+  let controls = document.getElementById(controlsId);
+  if (!controls) {
+    controls = document.createElement('div');
+    controls.id = controlsId;
+    controls.className = 'd-flex align-items-center py-1 w-100 mb-2';
+
+    // Spacer
+    const spacer = document.createElement('div');
+    spacer.style.flexGrow = '1';
+    spacer.innerHTML = '&nbsp;';
+    controls.appendChild(spacer);
+
+    // Sort dropdown
+    const sortSelect = document.createElement('select');
+    sortSelect.id = 'hub-sort-select';
+    sortSelect.className = 'form-control form-control-sm';
+    sortSelect.style.maxWidth = '200px';
+    const sortOptions = [
+      { value: '', text: 'Sort By' },
+      { value: 'distance-asc', text: 'Distance: Low to High' },
+      { value: 'distance-desc', text: 'Distance: High to Low' },
+      { value: 'flightNumber-asc', text: 'Flight ID: A to Z' },
+      { value: 'flightNumber-desc', text: 'Flight ID: Z to A' },
+      { value: 'aircraftId-asc', text: 'Aircraft ID: Low to High' },
+      { value: 'aircraftId-desc', text: 'Aircraft ID: High to Low' },
+      { value: 'totalDemand-asc', text: 'Total Demand: Low to High' },
+      { value: 'totalDemand-desc', text: 'Total Demand: High to Low' },
+      { value: 'demandEconomy-asc', text: 'Economy Demand: Low to High' },
+      { value: 'demandEconomy-desc', text: 'Economy Demand: High to Low' },
+      { value: 'demandBusiness-asc', text: 'Business Demand: Low to High' },
+      { value: 'demandBusiness-desc', text: 'Business Demand: High to Low' },
+      { value: 'demandFirst-asc', text: 'First Demand: Low to High' },
+      { value: 'demandFirst-desc', text: 'First Demand: High to Low' },
+    ];
+
+    sortOptions.forEach((option) => {
+      const opt = document.createElement('option');
+      opt.value = option.value;
+      opt.textContent = option.text;
+      sortSelect.appendChild(opt);
+    });
+    sortSelect.addEventListener('change', () => {
+      const [key, direction] = sortSelect.value.split('-');
+      if (!key) return;
+      const sortedRoutes = sortElementsByDataset(Array.from(routes), key, direction);
+      sortedRoutes.forEach((route) => {
+        route.parentElement.appendChild(route);
+      });
+    });
+    controls.appendChild(sortSelect);
+
+    // append controls after table header
+    const header = document.querySelector('.text-center.p-1.font-weight-bold.m-text');
+    if (header) {
+      header.appendChild(controls);
+    }
   }
 }
 
@@ -389,6 +486,26 @@ function soundEffects() {
   });
 }
 
+/**
+ * Helper function to sort elements based on dataset values.
+ * Handles both numeric and string sorting.
+ */
+function sortElementsByDataset(elements, key, direction) {
+  return elements.sort((a, b) => {
+    const valA = a.dataset[key];
+    const valB = b.dataset[key];
+
+    const isNumericA = !isNaN(parseFloat(valA)) && isFinite(valA);
+    const isNumericB = !isNaN(parseFloat(valB)) && isFinite(valB);
+
+    if (isNumericA && isNumericB) {
+      return direction === 'asc' ? parseFloat(valA) - parseFloat(valB) : parseFloat(valB) - parseFloat(valA);
+    } else {
+      return direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    }
+  });
+}
+
 (function () {
   console.log('Starting AM4 Usability & Immersion');
 
@@ -410,6 +527,7 @@ function soundEffects() {
     betterAutoPrice();
     customLiveries();
     orderScreenEnhancements();
+    hubScreenEnhancements();
     navbarEnhancements();
     soundEffects();
   };

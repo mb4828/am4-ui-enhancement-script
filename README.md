@@ -6,6 +6,7 @@
 - [✨ Features](#features)
   - [🎨 Custom Liveries](#-custom-liveries)
   - [✈️ Order Screen Enhancements](#%EF%B8%8F-order-screen-enhancements)
+  - [🏠 Hub Screen Enhancements](#-hub-screen-enhancements)
   - [🔔 Browser Notifications](#-browser-notifications)
   - [⛽️ Better Fuel and Co2 Tooltip](#%EF%B8%8F-better-fuel-and-co2-tooltip)
   - [💰 Better Auto Price](#-better-auto-price)
@@ -72,6 +73,10 @@ Includes the following improvements to the order screen:
 - Adds Cost per Passenger for quicker side-by-side comparisons.
 - Adds filtering to show all, favorites, or only affordable aircraft.
 - Adds sorting to organize aircraft by desired stats (e.g., cost, capacity, range).
+
+### 🏠 Hub Screen Enhancements
+
+Adds sorting to the Hub screen to organize routes by desired stats (e.g., id, distance, demand).
 
 ### 🔔 Browser Notifications
 
