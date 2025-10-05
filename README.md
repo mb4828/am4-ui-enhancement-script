@@ -76,7 +76,7 @@ Includes the following improvements to the order screen:
 
 ### 🏠 Hub Screen Enhancements
 
-Adds sorting to the Hub screen to organize routes by desired stats (e.g., id, distance, demand).
+Adds sorting to the Hub screen to organize routes by desired stats (e.g., id, distance, destination, demand).
 
 ### 🔔 Browser Notifications
 

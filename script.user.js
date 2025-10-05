@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AM4 UI Enhancements
 // @namespace    http://tampermonkey.net/
-// @version      1.2
+// @version      1.3
 // @description  Usability and Immersion improvements for Airline Manager 4
 // @author       matt@mattbrauner.com
 // @match        https://www.airlinemanager.com/*
@@ -255,18 +255,18 @@ function orderScreenEnhancements() {
     sortSelect.style.maxWidth = '200px';
     const sortOptions = [
       { value: '', text: 'Sort By' },
-      { value: 'cost-asc', text: 'Cost: Low to High' },
-      { value: 'cost-desc', text: 'Cost: High to Low' },
-      { value: 'pax-asc', text: 'Capacity: Low to High' },
-      { value: 'pax-desc', text: 'Capacity: High to Low' },
-      { value: 'range-asc', text: 'Range: Low to High' },
-      { value: 'range-desc', text: 'Range: High to Low' },
-      { value: 'speed-asc', text: 'Speed: Low to High' },
-      { value: 'speed-desc', text: 'Speed: High to Low' },
-      { value: 'consumption-asc', text: 'Consumption: Low to High' },
-      { value: 'consumption-desc', text: 'Consumption: High to Low' },
-      { value: 'costPerPax-asc', text: 'Cost/Pax: Low to High' },
-      { value: 'costPerPax-desc', text: 'Cost/Pax: High to Low' },
+      { value: 'cost-asc', text: 'Cost ↑' },
+      { value: 'cost-desc', text: 'Cost ↓' },
+      { value: 'pax-asc', text: 'Capacity ↑' },
+      { value: 'pax-desc', text: 'Capacity ↓' },
+      { value: 'range-asc', text: 'Range ↑' },
+      { value: 'range-desc', text: 'Range ↓' },
+      { value: 'speed-asc', text: 'Speed ↑' },
+      { value: 'speed-desc', text: 'Speed ↓' },
+      { value: 'consumption-asc', text: 'Consumption ↑' },
+      { value: 'consumption-desc', text: 'Consumption ↓' },
+      { value: 'costPerPax-asc', text: 'Cost/Pax ↑' },
+      { value: 'costPerPax-desc', text: 'Cost/Pax ↓' },
     ];
 
     sortOptions.forEach((option) => {
@@ -301,6 +301,9 @@ function hubScreenEnhancements() {
     if (route.dataset.distance) return; // Already processed
 
     // Extract and store route specs as data attributes
+
+    const destinationElem =
+      route.querySelector('td b')?.nextSibling?.nextSibling?.textContent.trim().split('-')[1] ?? '';
     const distanceElem = route.querySelector('.s-text')?.textContent.match(/([\d,]+)\s*km/) ?? '';
     const flightNumberElem = route.querySelector('b');
     const aircraftIdElem = route.querySelector('a[onclick*="fleet_details.php?id="]');
@@ -317,6 +320,7 @@ function hubScreenEnhancements() {
     const totalDemand = demand.economy + demand.business + demand.first;
 
     const specs = {
+      destination: destinationElem,
       distance: distanceElem ? parseInt(distanceElem[1].replace(/,/g, '')) : 0,
       flightNumber: flightNumberElem ? flightNumberElem.textContent.trim().slice(1) : '',
       aircraftId: aircraftIdElem ? aircraftIdElem.textContent.trim() : '',
@@ -351,20 +355,22 @@ function hubScreenEnhancements() {
     sortSelect.style.maxWidth = '200px';
     const sortOptions = [
       { value: '', text: 'Sort By' },
-      { value: 'distance-asc', text: 'Distance: Low to High' },
-      { value: 'distance-desc', text: 'Distance: High to Low' },
-      { value: 'flightNumber-asc', text: 'Flight ID: A to Z' },
-      { value: 'flightNumber-desc', text: 'Flight ID: Z to A' },
-      { value: 'aircraftId-asc', text: 'Aircraft ID: Low to High' },
-      { value: 'aircraftId-desc', text: 'Aircraft ID: High to Low' },
-      { value: 'totalDemand-asc', text: 'Total Demand: Low to High' },
-      { value: 'totalDemand-desc', text: 'Total Demand: High to Low' },
-      { value: 'demandEconomy-asc', text: 'Economy Demand: Low to High' },
-      { value: 'demandEconomy-desc', text: 'Economy Demand: High to Low' },
-      { value: 'demandBusiness-asc', text: 'Business Demand: Low to High' },
-      { value: 'demandBusiness-desc', text: 'Business Demand: High to Low' },
-      { value: 'demandFirst-asc', text: 'First Demand: Low to High' },
-      { value: 'demandFirst-desc', text: 'First Demand: High to Low' },
+      { value: 'distance-asc', text: 'Distance ↑' },
+      { value: 'distance-desc', text: 'Distance ↓' },
+      { value: 'destination-asc', text: 'Destination ↑' },
+      { value: 'destination-desc', text: 'Destination ↓' },
+      { value: 'flightNumber-asc', text: 'Flight ↑' },
+      { value: 'flightNumber-desc', text: 'Flight ↓' },
+      { value: 'aircraftId-asc', text: 'Aircraft ↑' },
+      { value: 'aircraftId-desc', text: 'Aircraft ↓' },
+      { value: 'totalDemand-asc', text: 'Total Demand ↑' },
+      { value: 'totalDemand-desc', text: 'Total Demand ↓' },
+      { value: 'demandEconomy-asc', text: 'Economy Demand ↑' },
+      { value: 'demandEconomy-desc', text: 'Economy Demand ↓' },
+      { value: 'demandBusiness-asc', text: 'Business Demand ↑' },
+      { value: 'demandBusiness-desc', text: 'Business Demand ↓' },
+      { value: 'demandFirst-asc', text: 'First Demand ↑' },
+      { value: 'demandFirst-desc', text: 'First Demand ↓' },
     ];
 
     sortOptions.forEach((option) => {
