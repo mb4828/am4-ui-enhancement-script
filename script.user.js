@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AM4 UI Enhancements
 // @namespace    http://tampermonkey.net/
-// @version      1.3
+// @version      1.4
 // @description  Usability and Immersion improvements for Airline Manager 4
 // @author       matt@mattbrauner.com
 // @match        https://www.airlinemanager.com/*
@@ -448,6 +448,34 @@ function navbarEnhancements() {
   li.dataset.navbarEnhancementsBound = 'true';
 }
 
+/** Maintenance screen enhancements */
+function maintenanceScreenEnhancements() {
+  const acList = document.querySelectorAll('#maintAction #acListView div');
+  if (!acList || acList.length === 0) return;
+
+  acList.forEach((row) => {
+    if (row.dataset.maintenanceEnhancementsBound) return; // Already processed
+
+    // Get aircraft id
+    const controlsDiv = row.querySelector('.controls');
+    if (!controlsDiv || controlsDiv.dataset.maintenanceEnhancementsBound) return;
+    const aircraftId = controlsDiv.id.replace('controls', '');
+
+    // Add locate button
+    const btnGroup = controlsDiv.querySelector('.btn-group');
+    if (btnGroup) {
+      btnGroup.insertAdjacentHTML(
+        'beforeend',
+        `<button class="btn btn-xs-real btn-outline-dark" onclick="closePop(); showFlightInfo(this, '${aircraftId}', 7);">
+           <span class="glyphicons glyphicons-map-marker"></span> Locate
+         </button>`
+      );
+    }
+
+    controlsDiv.dataset.maintenanceEnhancementsBound = 'true';
+  });
+}
+
 /** Adds browser notifiations for when the landed list and parked list change */
 function browserNotifications() {
   const notify = (message) => {
@@ -534,6 +562,7 @@ function sortElementsByDataset(elements, key, direction) {
     customLiveries();
     orderScreenEnhancements();
     hubScreenEnhancements();
+    maintenanceScreenEnhancements();
     navbarEnhancements();
     soundEffects();
   };

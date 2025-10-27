@@ -7,6 +7,7 @@
   - [🎨 Custom Liveries](#-custom-liveries)
   - [✈️ Order Screen Enhancements](#%EF%B8%8F-order-screen-enhancements)
   - [🏠 Hub Screen Enhancements](#-hub-screen-enhancements)
+  - [🛠️ Maintenance Screen Enhancements](#-maintenance-screen-enhancements)
   - [🔔 Browser Notifications](#-browser-notifications)
   - [⛽️ Better Fuel and Co2 Tooltip](#%EF%B8%8F-better-fuel-and-co2-tooltip)
   - [💰 Better Auto Price](#-better-auto-price)
@@ -77,6 +78,10 @@ Includes the following improvements to the order screen:
 ### 🏠 Hub Screen Enhancements
 
 Adds sorting to the Hub screen to organize routes by desired stats (e.g., id, distance, destination, demand).
+
+### 🛠️ Maintenance Screen Enhancements
+
+Adds a Locate button to the Maintenance Plan screen to easily locate aircraft and determine when they will be ready for maintenance.
 
 ### 🔔 Browser Notifications
 
