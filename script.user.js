@@ -40,27 +40,42 @@ function hideGameAds() {
 }
 
 /** Better auto price */
+function getBetterAutoPriceOnclick(cmd) {
+  if (!cmd) return null;
+
+  const callMatch = cmd.match(/\b(ticketPriceSuggest|autoPrice)\s*\(([^)]*)\)/);
+  if (!callMatch) return null;
+
+  const args = callMatch[2].split(',').map((arg) => arg.trim());
+  if (args.length < 3) return null;
+
+  const multipliers = [1.1, 1.08, 1.06];
+  for (let i = 0; i < multipliers.length; i++) {
+    const value = Number(args[i]);
+    if (!Number.isFinite(value)) return null;
+    args[i] = String(Math.ceil(value * multipliers[i]) - 1);
+  }
+
+  const start = callMatch.index;
+  const end = start + callMatch[0].length;
+  return `${cmd.slice(0, start)}${callMatch[1]}(${args.join(',')})${cmd.slice(end)}`;
+}
+
 function betterAutoPrice() {
-  const autoPriceButton = document.querySelector('button[onclick*="ticketPriceSuggest"], button[onclick*="autoPrice"]');
-  if (autoPriceButton && !autoPriceButton.dataset.hasBetterAutoPrice) {
-    const cmd = autoPriceButton.getAttribute('onclick');
+  const autoPriceButtons = document.querySelectorAll('button[onclick*="ticketPriceSuggest"], button[onclick*="autoPrice"]');
 
-    // extract function name and args
-    const functionName = cmd.slice(0, cmd.indexOf('('));
-    const args = cmd.slice(cmd.indexOf('(') + 1, cmd.indexOf(')')).split(',');
+  autoPriceButtons.forEach((autoPriceButton) => {
+    if (autoPriceButton.dataset.hasBetterAutoPrice) return;
 
-    // adjust first 3 args by multipliers
-    args[0] = Math.floor(args[0] * 1.1) - 1;
-    args[1] = Math.floor(args[1] * 1.08) - 1;
-    args[2] = Math.floor(args[2] * 1.06) - 1;
+    const updatedOnclick = getBetterAutoPriceOnclick(autoPriceButton.getAttribute('onclick'));
+    if (!updatedOnclick) return;
 
-    // set new onclick with adjusted args
-    autoPriceButton.setAttribute('onclick', `${functionName}(${args.join(',')})`);
+    autoPriceButton.setAttribute('onclick', updatedOnclick);
 
     // Update button text to indicate improved pricing
     autoPriceButton.innerHTML = autoPriceButton.innerHTML.replace(/Auto/i, 'Better Auto');
     autoPriceButton.dataset.hasBetterAutoPrice = 'true';
-  }
+  });
 }
 
 /** Override default aircraft images with custom liveries */
@@ -567,6 +582,7 @@ function sortElementsByDataset(elements, key, direction) {
     soundEffects();
   };
   new MutationObserver(observerCallback).observe(document.body, { childList: true, subtree: true });
+  observerCallback();
 
   browserNotifications();
 })();
