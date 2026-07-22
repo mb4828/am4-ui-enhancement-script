@@ -25,7 +25,7 @@ AM4-UI is an free, open source [mod](https://en.wikipedia.org/wiki/Video_game_mo
 
 ### What This Isn't
 
-AM4-UI is **not a bot**. It does not automate any functions of the game, play for you, or facilitate cheating or exploits. Additionally, AM4-UI does not collect any personal data or access files on your computer.
+AM4-UI is **not a bot**. It does not automate any functions of the game, it **will not** play for you, or facilitate cheating or exploits. Additionally, AM4-UI does not collect any personal data or access files on your computer. All information used in this script is publicly available with open source.
 
 ### How It Works
 
@@ -93,18 +93,22 @@ To enable, click "Allow" when the popup appears asking if you want to permit not
 
 The Fuel and Co2 popup now shows the fuel and Co2 levels without having to open the fuel page. Just mouse over the fuel/Co2 gauge in the menu bar.
 
-It also fetches the AM4 Helper resource price schedule and shows today's lowest fuel and Co2 prices in your local time. The schedule is downloaded once per page session and reused while the page is open.
+It also fetches the AM4 Helper resource price schedule and shows today's lowest fuel and Co2 prices in your local time. The schedule is downloaded once per page session and reused while the page is open. If the first download fails, the script will retry later instead of requiring a page refresh.
 
-Click the Fuel/Co2 gauge to open the Resource Market modal:
+The script adds a small **Market** button next to the Fuel/Co2 gauge so the game's original Fuel/Co2 control still works normally. Click **Market** to open the Resource Market modal:
+- The modal shows the current fuel price, current Co2 price, and the current 30-minute price slot start/end time.
 - The 24h Window tab charts fuel and Co2 prices from 12 hours before now through 12 hours after now, with a center line for the current time.
 - Each chart shows the best upcoming price and a live HH:MM:SS countdown.
 - Hover over the charts to see the price and local time for the nearest price point.
 - The Day View tab lets you pick a date and shows a full table for that day.
-- The lowest three fuel prices and lowest three Co2 prices are highlighted in green, including their timestamps.
+- The current price slot row is outlined, and the lowest three fuel prices and lowest three Co2 prices are highlighted in green, including their timestamps.
+- Low-price browser alerts can be enabled or disabled from the modal, with editable fuel and Co2 thresholds. Alerts check the current real-world 00/30 minute price slot once per minute and only notify once per resource/price/slot.
 
 ### 💰 Better Auto Price
 
 Automatically applies recommended multipliers (1.1, 1.08, 1.06) to the auto price button, boosting profit. Not a substitute for the Discord bot, but maybe someone can help make this better in the future.
+
+The script also shows a compact comparison between the original Auto prices and the Better Auto prices for Economy, Business, and First. Use the **Use Original** and **Use Better** buttons to repopulate the fare inputs without recalculating prices from the game.
 
 ### 🔈 Immersive Sounds
 Adds the following sound effects:
