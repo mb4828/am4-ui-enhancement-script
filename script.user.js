@@ -3,7 +3,7 @@
 // @namespace    http://tampermonkey.net/
 // @version      1.5
 // @description  Usability and Immersion improvements for Airline Manager 4
-// @author       matt@mattbrauner.com
+// @author       matt@mattbrauner.com & Haruko
 // @match        https://www.airlinemanager.com/*
 // @icon         https://www.airlinemanager.com/favicon.ico
 // @homepage     https://github.com/mb4828/am4-ui-enhancement-script
@@ -33,6 +33,12 @@ const RESOURCE_PRICE_SCHEDULE_URL =
   'https://raw.githubusercontent.com/theheuman/am4-helper/main/resource-prices.json';
 const RESOURCE_MARKET_MODAL_ID = 'am4-resource-market-modal';
 const RESOURCE_MARKET_RESOURCES = ['fuel', 'co2'];
+const RESOURCE_PRICE_ALERTS = {
+  enabled: true,
+  fuelThreshold: 550,
+  co2Threshold: 130,
+};
+const RESOURCE_ALERT_SETTINGS_KEY = 'am4-resource-alert-settings';
 let resourcePricesPromise = null;
 let resourcePricesData = null;
 
@@ -49,7 +55,7 @@ function hideGameAds() {
 }
 
 /** Better auto price */
-function getBetterAutoPriceOnclick(cmd) {
+function getBetterAutoPriceDetails(cmd) {
   if (!cmd) return null;
 
   const callMatch = cmd.match(/\b(ticketPriceSuggest|autoPrice)\s*\(([^)]*)\)/);
@@ -59,15 +65,122 @@ function getBetterAutoPriceOnclick(cmd) {
   if (args.length < 3) return null;
 
   const multipliers = [1.1, 1.08, 1.06];
+  const originalPrices = [];
+  const betterPrices = [];
   for (let i = 0; i < multipliers.length; i++) {
     const value = Number(args[i]);
     if (!Number.isFinite(value)) return null;
-    args[i] = String(Math.ceil(value * multipliers[i]) - 1);
+    originalPrices.push(value);
+    betterPrices.push(Math.ceil(value * multipliers[i]) - 1);
+    args[i] = String(betterPrices[i]);
   }
 
   const start = callMatch.index;
   const end = start + callMatch[0].length;
-  return `${cmd.slice(0, start)}${callMatch[1]}(${args.join(',')})${cmd.slice(end)}`;
+  return {
+    originalPrices,
+    betterPrices,
+    updatedOnclick: `${cmd.slice(0, start)}${callMatch[1]}(${args.join(',')})${cmd.slice(end)}`,
+  };
+}
+
+function formatAutoPriceValues(prices) {
+  return prices.map((price) => price.toLocaleString()).join(' / ');
+}
+
+function getAutoPriceInputs(button) {
+  const container =
+    button.closest('.modal, form, .row, .container, .card, body') || document.body;
+  const inputs = Array.from(container.querySelectorAll('input'))
+    .filter((input) => {
+      const type = (input.getAttribute('type') || 'text').toLowerCase();
+      return ['text', 'number', 'tel'].includes(type) && !input.disabled && input.offsetParent !== null;
+    });
+  const cabinInputs = ['economy', 'business', 'first']
+    .map((cabin) =>
+      inputs.find((input) =>
+        ['placeholder', 'name', 'id', 'aria-label'].some((attr) =>
+          (input.getAttribute(attr) || '').toLowerCase().includes(cabin)
+        )
+      )
+    )
+    .filter(Boolean);
+
+  return cabinInputs.length === 3 ? cabinInputs : inputs.slice(0, 3);
+}
+
+function applyAutoPriceValues(button, prices) {
+  getAutoPriceInputs(button).forEach((input, index) => {
+    if (!Number.isFinite(prices[index])) return;
+    input.value = prices[index];
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+}
+
+function addBetterAutoPriceComparison(button, originalPrices, betterPrices) {
+  if (button.dataset.hasBetterAutoPriceComparison) return;
+
+  const comparison = document.createElement('div');
+  comparison.className = 'am4-better-auto-price-comparison';
+  comparison.style.cssText = [
+    'display:block',
+    'width:100%',
+    'max-width:100%',
+    'box-sizing:border-box',
+    'clear:both',
+    'margin:6px 0 0',
+    'padding:6px 8px',
+    'border:1px solid #d7e3f0',
+    'border-radius:6px',
+    'background:#f8fbff',
+    'color:#43505f',
+    'font-size:11px',
+    'line-height:1.35',
+    'text-align:left',
+    'white-space:normal',
+  ].join(';');
+  comparison.dataset.originalPrices = JSON.stringify(originalPrices);
+  comparison.dataset.betterPrices = JSON.stringify(betterPrices);
+  comparison.innerHTML = `
+    <div><strong>E:</strong> ${originalPrices[0].toLocaleString()} -> ${betterPrices[0].toLocaleString()}</div>
+    <div><strong>B:</strong> ${originalPrices[1].toLocaleString()} -> ${betterPrices[1].toLocaleString()}</div>
+    <div><strong>F:</strong> ${originalPrices[2].toLocaleString()} -> ${betterPrices[2].toLocaleString()}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:5px;">
+      <button type="button" class="am4-use-original-price">Original</button>
+      <button type="button" class="am4-use-better-price">Better</button>
+    </div>
+  `;
+  comparison.querySelectorAll('button').forEach((control) => {
+    control.style.cssText = [
+      'display:inline-flex',
+      'align-items:center',
+      'justify-content:center',
+      'min-width:64px',
+      'height:24px',
+      'padding:2px 8px',
+      'border:1px solid #9db7d4',
+      'border-radius:4px',
+      'background:#ffffff',
+      'color:#2466a8',
+      'font-size:11px',
+      'line-height:1',
+      'cursor:pointer',
+    ].join(';');
+  });
+  comparison.querySelector('.am4-use-original-price').addEventListener('click', () => {
+    applyAutoPriceValues(button, JSON.parse(comparison.dataset.originalPrices || '[]'));
+  });
+  comparison.querySelector('.am4-use-better-price').addEventListener('click', () => {
+    applyAutoPriceValues(button, JSON.parse(comparison.dataset.betterPrices || '[]'));
+  });
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'am4-better-auto-price-wrapper';
+  wrapper.style.cssText = 'display:block;width:100%;max-width:100%;clear:both;';
+  wrapper.appendChild(comparison);
+  button.insertAdjacentElement('afterend', wrapper);
+  button.dataset.hasBetterAutoPriceComparison = 'true';
 }
 
 function betterAutoPrice() {
@@ -76,13 +189,21 @@ function betterAutoPrice() {
   autoPriceButtons.forEach((autoPriceButton) => {
     if (autoPriceButton.dataset.hasBetterAutoPrice) return;
 
-    const updatedOnclick = getBetterAutoPriceOnclick(autoPriceButton.getAttribute('onclick'));
-    if (!updatedOnclick) return;
+    const originalOnclick = autoPriceButton.getAttribute('onclick');
+    const priceDetails = getBetterAutoPriceDetails(originalOnclick);
+    if (!priceDetails) return;
 
-    autoPriceButton.setAttribute('onclick', updatedOnclick);
+    autoPriceButton.dataset.originalOnclick = originalOnclick;
+    autoPriceButton.dataset.betterOnclick = priceDetails.updatedOnclick;
+    autoPriceButton.dataset.originalPrices = JSON.stringify(priceDetails.originalPrices);
+    autoPriceButton.dataset.betterPrices = JSON.stringify(priceDetails.betterPrices);
+    autoPriceButton.setAttribute('onclick', priceDetails.updatedOnclick);
 
     // Update button text to indicate improved pricing
     autoPriceButton.innerHTML = autoPriceButton.innerHTML.replace(/Auto/i, 'Better Auto');
+    autoPriceButton.style.maxWidth = '100%';
+    autoPriceButton.style.whiteSpace = 'normal';
+    addBetterAutoPriceComparison(autoPriceButton, priceDetails.originalPrices, priceDetails.betterPrices);
     autoPriceButton.dataset.hasBetterAutoPrice = 'true';
   });
 }
@@ -137,24 +258,33 @@ function customLiveries() {
 }
 
 /** Order screen enhancements */
+function getOrderRows() {
+  return Array.from(document.querySelectorAll('#acListDetail div[id^="listSection"]'));
+}
+
 function orderScreenEnhancements() {
   const acListDetail = document.getElementById('acListDetail');
   if (!acListDetail) return;
 
-  const orders = document.querySelectorAll('#acListDetail div[id^="listSection"]');
+  const orders = getOrderRows();
   orders.forEach((order) => {
     if (order.dataset.pax) return; // Already processed
 
     // Extract and store aircraft specs as data attributes
     const specText = order.querySelector('.s-text');
     const costText = order.querySelector('.text-success') || order.querySelector('.text-danger');
+    const specContent = specText?.textContent || '';
+    const paxMatch = specContent.match(/(\d+)\s*pax/);
+    const consumptionMatch = specContent.match(/(\d+(?:\.\d+)?)\s*lbs per km/);
+    const rangeMatch = specContent.match(/(\d+(?:,\d+)*)\s*km/);
+    const speedMatch = specContent.match(/(\d+(?:,\d+)*)\s*kph/);
     const specs = {
       affordable: order.querySelector('.text-success') ? true : false,
-      cost: parseInt(costText.textContent.replace(/[\$,]/g, '')) || 0,
-      pax: parseInt(specText.textContent.match(/(\d+)\s*pax/)[1]) || 0,
-      consumption: parseFloat(specText.textContent.match(/(\d+(?:\.\d+)?)\s*lbs per km/)[1]) || 0,
-      range: parseInt(specText.textContent.match(/(\d+(?:,\d+)*)\s*km/)[1].replace(/,/g, '')) || 0,
-      speed: parseInt(specText.textContent.match(/(\d+(?:,\d+)*)\s*kph/)[1].replace(/,/g, '')) || 0,
+      cost: parseInt((costText?.textContent || '').replace(/[\$,]/g, '')) || 0,
+      pax: paxMatch ? parseInt(paxMatch[1]) || 0 : 0,
+      consumption: consumptionMatch ? parseFloat(consumptionMatch[1]) || 0 : 0,
+      range: rangeMatch ? parseInt(rangeMatch[1].replace(/,/g, '')) || 0 : 0,
+      speed: speedMatch ? parseInt(speedMatch[1].replace(/,/g, '')) || 0 : 0,
     };
     specs.costPerPax = specs.pax ? specs.cost / specs.pax : 0;
     Object.entries(specs).forEach(([key, value]) => {
@@ -179,10 +309,16 @@ function orderScreenEnhancements() {
         <dd class="col-5 m-0 pr-0">$${Math.round(specs.costPerPax).toLocaleString()}</dd>
       </dl>
     `;
-    specText.replaceWith(newSpecs);
+    if (specText) {
+      specText.replaceWith(newSpecs);
+    }
 
     // Add favorite star button to aircraft name
     const nameElem = order.querySelector('b');
+    if (!nameElem?.parentElement) {
+      order.dataset.pax = specs.pax;
+      return;
+    }
     const favoriteKey = `aircraft_favorite_${nameElem.textContent.trim()}`;
     order.dataset.favorited = GM_getValue(favoriteKey) ? 'true' : 'false';
 
@@ -254,7 +390,7 @@ function orderScreenEnhancements() {
     const inputs = segmentControl.querySelectorAll('label.filter-label');
     inputs.forEach((input) => {
       input.addEventListener('click', () => {
-        orders.forEach((order) => {
+        getOrderRows().forEach((order) => {
           order.style.display = '';
           if (input.id === 'label-favorites' && order.dataset.favorited !== 'true') {
             order.style.display = 'none';
@@ -302,9 +438,9 @@ function orderScreenEnhancements() {
     sortSelect.addEventListener('change', () => {
       const [key, direction] = sortSelect.value.split('-');
       if (!key) return;
-      const sortedOrders = sortElementsByDataset(Array.from(orders), key, direction);
+      const sortedOrders = sortElementsByDataset(getOrderRows(), key, direction);
       sortedOrders.forEach((order) => {
-        order.parentElement.appendChild(order);
+        order.parentElement?.appendChild(order);
       });
     });
     controls.appendChild(sortSelect);
@@ -314,26 +450,38 @@ function orderScreenEnhancements() {
 }
 
 /** Hub screen enhancements */
+function getHubRouteRows() {
+  const hubDetail = document.getElementById('hubDetail');
+  if (!hubDetail) return [];
+
+  return Array.from(hubDetail.querySelectorAll('table tr')).filter(
+    (route) => !route.closest('#demandView') && (route.querySelector('a[onclick*="fleet_details.php?id="]') || route.querySelector('.s-text'))
+  );
+}
+
 function hubScreenEnhancements() {
-  const hubId = document
-    .querySelectorAll('#hubDetail .col-6.text-center.p-2.font-weight-bold')[1]
-    ?.textContent.split('/')[0];
+  const hubDetail = document.getElementById('hubDetail');
+  if (!hubDetail) return;
+
+  const hubId = hubDetail
+    .querySelectorAll('.col-6.text-center.p-2.font-weight-bold')[1]
+    ?.textContent?.split('/')[0];
   if (!hubId) return;
 
-  const routes = document.querySelectorAll('tr:not(#demandView tr)');
+  const routes = getHubRouteRows();
   routes.forEach((route) => {
     if (route.dataset.distance) return; // Already processed
 
     // Extract and store route specs as data attributes
 
-    const destinationElem =
-      route.querySelector('td b')?.nextSibling?.nextSibling?.textContent.trim().split('-')[1] ?? '';
-    const distanceElem = route.querySelector('.s-text')?.textContent.match(/([\d,]+)\s*km/) ?? '';
+    const destinationText = route.querySelector('td b')?.nextSibling?.nextSibling?.textContent?.trim() || '';
+    const destinationElem = destinationText.split('-')[1] || '';
+    const distanceElem = route.querySelector('.s-text')?.textContent?.match(/([\d,]+)\s*km/) || null;
     const flightNumberElem = route.querySelector('b');
     const aircraftIdElem = route.querySelector('a[onclick*="fleet_details.php?id="]');
     const demandRegex = /Demand:\s*(\d+[\d,]*)\s*\/\s*(\d+[\d,]*)\s*\/\s*(\d+[\d,]*)/;
-    const demandElem = Array.from(route.querySelectorAll('.s-text')).find((el) => demandRegex.test(el.textContent));
-    const demandMatch = demandElem ? demandElem.textContent.match(demandRegex) : null;
+    const demandElem = Array.from(route.querySelectorAll('.s-text')).find((el) => demandRegex.test(el.textContent || ''));
+    const demandMatch = demandElem ? (demandElem.textContent || '').match(demandRegex) : null;
     const demand = demandMatch
       ? {
           economy: parseInt(demandMatch[1].replace(/,/g, '')) || 0,
@@ -406,15 +554,15 @@ function hubScreenEnhancements() {
     sortSelect.addEventListener('change', () => {
       const [key, direction] = sortSelect.value.split('-');
       if (!key) return;
-      const sortedRoutes = sortElementsByDataset(Array.from(routes), key, direction);
+      const sortedRoutes = sortElementsByDataset(getHubRouteRows(), key, direction);
       sortedRoutes.forEach((route) => {
-        route.parentElement.appendChild(route);
+        route.parentElement?.appendChild(route);
       });
     });
     controls.appendChild(sortSelect);
 
     // append controls after table header
-    const header = document.querySelector('.text-center.p-1.font-weight-bold.m-text');
+    const header = hubDetail.querySelector('.text-center.p-1.font-weight-bold.m-text');
     if (header) {
       header.appendChild(controls);
     }
@@ -488,12 +636,28 @@ function navbarEnhancements() {
     updateResourcePriceText();
   });
   li.addEventListener('mouseout', () => (fetched = false));
-  li.addEventListener('click', (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    openResourceMarketModal();
-  });
-  li.style.cursor = 'pointer';
+  if (!document.getElementById('am4-resource-market-nav-button')) {
+    const marketButton = document.createElement('button');
+    marketButton.id = 'am4-resource-market-nav-button';
+    marketButton.type = 'button';
+    marketButton.className = 'btn btn-xs-real btn-outline-info ml-1';
+    marketButton.textContent = 'Market';
+    marketButton.title = 'Open Resource Market';
+    marketButton.style.marginLeft = '4px';
+    marketButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      openResourceMarketModal();
+    });
+    if (li.tagName === 'LI') {
+      const marketItem = document.createElement('li');
+      marketItem.className = li.className;
+      marketItem.appendChild(marketButton);
+      li.insertAdjacentElement('afterend', marketItem);
+    } else {
+      li.insertAdjacentElement('afterend', marketButton);
+    }
+  }
 
   // Mark as initialized
   li.dataset.navbarEnhancementsBound = 'true';
@@ -511,6 +675,7 @@ function maintenanceScreenEnhancements() {
     const controlsDiv = row.querySelector('.controls');
     if (!controlsDiv || controlsDiv.dataset.maintenanceEnhancementsBound) return;
     const aircraftId = controlsDiv.id.replace('controls', '');
+    if (!aircraftId) return;
 
     // Add locate button
     const btnGroup = controlsDiv.querySelector('.btn-group');
@@ -528,9 +693,10 @@ function maintenanceScreenEnhancements() {
 }
 
 function fetchResourcePrices() {
+  if (resourcePricesData) return Promise.resolve(resourcePricesData);
   if (resourcePricesPromise) return resourcePricesPromise;
 
-  resourcePricesPromise = new Promise((resolve, reject) => {
+  const requestPromise = new Promise((resolve, reject) => {
     if (typeof GM_xmlhttpRequest !== 'function') {
       const error = new Error('GM_xmlhttpRequest is unavailable');
       console.error('AM4 resource price tooltip fetch failure', error);
@@ -576,6 +742,11 @@ function fetchResourcePrices() {
       console.error('AM4 resource price tooltip fetch failure', error);
       reject(error);
     }
+  });
+
+  resourcePricesPromise = requestPromise.catch((error) => {
+    resourcePricesPromise = null;
+    throw error;
   });
 
   return resourcePricesPromise;
@@ -629,6 +800,85 @@ function getCurrentResourcePrice(data, now) {
     ...entry,
     slotStart: slotStart.toISOString(),
   };
+}
+
+function getResourcePriceSlotEnd(slotStartIso) {
+  return new Date(new Date(slotStartIso).getTime() + 30 * 60 * 1000);
+}
+
+function getResourceAlertSettings() {
+  const storedSettings = GM_getValue(RESOURCE_ALERT_SETTINGS_KEY, {});
+  return {
+    ...RESOURCE_PRICE_ALERTS,
+    ...(storedSettings && typeof storedSettings === 'object' ? storedSettings : {}),
+  };
+}
+
+function setResourceAlertSettings(settings) {
+  const fuelThreshold = Number(settings.fuelThreshold);
+  const co2Threshold = Number(settings.co2Threshold);
+  GM_setValue(RESOURCE_ALERT_SETTINGS_KEY, {
+    enabled: !!settings.enabled,
+    fuelThreshold: Number.isFinite(fuelThreshold) ? fuelThreshold : RESOURCE_PRICE_ALERTS.fuelThreshold,
+    co2Threshold: Number.isFinite(co2Threshold) ? co2Threshold : RESOURCE_PRICE_ALERTS.co2Threshold,
+  });
+}
+
+function notifyResourcePriceLow(resourceKey, price, slotStartIso) {
+  if (!window.Notification || Notification.permission !== 'granted') return false;
+
+  const resourceName = resourceKey === 'co2' ? 'CO2' : 'Fuel';
+  const validUntil = formatResourcePriceTime(getResourcePriceSlotEnd(slotStartIso));
+  try {
+    new Notification(`${resourceName} is low: $${price}`, {
+      body: `Valid until ${validUntil}`,
+      icon: 'https://www.airlinemanager.com/favicon.ico',
+    });
+    notificationSound.play().catch(() => {});
+    return true;
+  } catch (error) {
+    console.error('AM4 resource price alert notification failure', error);
+    return false;
+  }
+}
+
+async function checkResourcePriceAlerts() {
+  const settings = getResourceAlertSettings();
+  if (!settings.enabled) return;
+
+  let price;
+  try {
+    const data = await fetchResourcePrices();
+    price = getCurrentResourcePrice(data, new Date());
+  } catch (error) {
+    return;
+  }
+  if (!price?.slotStart) return;
+
+  const resources = [
+    { key: 'fuel', threshold: Number(settings.fuelThreshold) },
+    { key: 'co2', threshold: Number(settings.co2Threshold) },
+  ];
+
+  resources.forEach(({ key, threshold }) => {
+    const value = Number(price[key]);
+    if (!Number.isFinite(value) || !Number.isFinite(threshold) || value > threshold) return;
+
+    const alertKey = `am4-resource-alert:${price.slotStart}:${key}:${value}`;
+    if (GM_getValue(alertKey)) return;
+
+    if (notifyResourcePriceLow(key, value, price.slotStart)) {
+      GM_setValue(alertKey, new Date().toISOString());
+    }
+  });
+}
+
+function resourcePriceAlerts() {
+  if (window._am4ResourcePriceAlertsInitialized) return;
+  window._am4ResourcePriceAlertsInitialized = true;
+
+  checkResourcePriceAlerts();
+  window.setInterval(checkResourcePriceAlerts, 60 * 1000);
 }
 
 function getTodayLowResourcePrices(data, now) {
@@ -769,6 +1019,50 @@ function ensureResourceMarketStyles() {
       color: #475569;
       font-size: 18px;
     }
+    #${RESOURCE_MARKET_MODAL_ID} .am4-resource-market-summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    #${RESOURCE_MARKET_MODAL_ID} .am4-resource-market-summary-item {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #f8fafc;
+      padding: 8px 10px;
+    }
+    #${RESOURCE_MARKET_MODAL_ID} .am4-resource-market-summary-label {
+      display: block;
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    #${RESOURCE_MARKET_MODAL_ID} .am4-resource-market-summary-value {
+      color: #0f172a;
+      font-size: 15px;
+      font-weight: 700;
+    }
+    #${RESOURCE_MARKET_MODAL_ID} .am4-resource-market-settings {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding: 10px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #f8fafc;
+      color: #0f172a;
+      font-size: 13px;
+    }
+    #${RESOURCE_MARKET_MODAL_ID} .am4-resource-market-settings input[type="number"] {
+      width: 82px;
+      min-height: 30px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 3px 6px;
+    }
     #${RESOURCE_MARKET_MODAL_ID} .am4-resource-market-chart-header {
       display: flex;
       align-items: baseline;
@@ -872,6 +1166,14 @@ function ensureResourceMarketStyles() {
       color: #14532d;
       font-weight: 700;
     }
+    #${RESOURCE_MARKET_MODAL_ID} .am4-resource-market-table tr.am4-resource-market-current-row td {
+      box-shadow: inset 0 0 0 2px #2563eb;
+    }
+    @media (max-width: 720px) {
+      #${RESOURCE_MARKET_MODAL_ID} .am4-resource-market-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
   `;
   document.head.appendChild(style);
 }
@@ -950,6 +1252,18 @@ function getLowestResourceIndexes(entries, resourceKey, count) {
       .slice(0, count)
       .map((entry) => entry.index)
   );
+}
+
+function getResourceMarketCurrentInfo(data, now) {
+  const price = getCurrentResourcePrice(data, now);
+  if (!price?.slotStart) return null;
+
+  return {
+    fuel: Number(price.fuel),
+    co2: Number(price.co2),
+    slotStart: new Date(price.slotStart),
+    slotEnd: getResourcePriceSlotEnd(price.slotStart),
+  };
 }
 
 function getCanvasPointerPosition(canvas, event) {
@@ -1090,6 +1404,13 @@ function getResourceMarketElements(modal) {
     panels: Array.from(modal.querySelectorAll('.am4-resource-market-panel')),
     dateInput: modal.querySelector('#am4-resource-market-date'),
     dayTableBody: modal.querySelector('.am4-resource-market-table tbody'),
+    currentFuel: modal.querySelector('[data-current-resource="fuel"]'),
+    currentCo2: modal.querySelector('[data-current-resource="co2"]'),
+    slotStart: modal.querySelector('[data-current-slot="start"]'),
+    slotEnd: modal.querySelector('[data-current-slot="end"]'),
+    alertEnabled: modal.querySelector('#am4-resource-alert-enabled'),
+    fuelThreshold: modal.querySelector('#am4-resource-fuel-threshold'),
+    co2Threshold: modal.querySelector('#am4-resource-co2-threshold'),
     charts,
     bestLabels,
   };
@@ -1097,10 +1418,40 @@ function getResourceMarketElements(modal) {
   return modal._am4ResourceMarketElements;
 }
 
-function renderResourceMarketWindow(modal, data) {
+function renderResourceMarketSettings(modal) {
+  const elements = getResourceMarketElements(modal);
+  const settings = getResourceAlertSettings();
+
+  elements.alertEnabled.checked = !!settings.enabled;
+  elements.fuelThreshold.value = settings.fuelThreshold;
+  elements.co2Threshold.value = settings.co2Threshold;
+}
+
+function saveResourceMarketSettings(modal) {
+  const elements = getResourceMarketElements(modal);
+  setResourceAlertSettings({
+    enabled: elements.alertEnabled.checked,
+    fuelThreshold: Number(elements.fuelThreshold.value),
+    co2Threshold: Number(elements.co2Threshold.value),
+  });
+  checkResourcePriceAlerts();
+}
+
+function renderResourceMarketCurrentInfo(modal, data, now) {
+  const elements = getResourceMarketElements(modal);
+  const current = getResourceMarketCurrentInfo(data, now);
+
+  elements.currentFuel.textContent = current && Number.isFinite(current.fuel) ? `$${current.fuel}` : 'N/A';
+  elements.currentCo2.textContent = current && Number.isFinite(current.co2) ? `$${current.co2}` : 'N/A';
+  elements.slotStart.textContent = current ? formatResourcePriceTime(current.slotStart) : 'N/A';
+  elements.slotEnd.textContent = current ? formatResourcePriceTime(current.slotEnd) : 'N/A';
+}
+
+function renderResourceMarketWindow(modal, data, redrawCharts = true) {
   const elements = getResourceMarketElements(modal);
   const now = new Date();
   const windowData = getResourceMarketWindowEntries(data, now);
+  renderResourceMarketCurrentInfo(modal, data, now);
 
   RESOURCE_MARKET_RESOURCES.forEach((resourceKey) => {
     const label = elements.bestLabels[resourceKey];
@@ -1110,6 +1461,8 @@ function renderResourceMarketWindow(modal, data) {
       ? `Best price next: $${best[resourceKey]} in ${formatResourceMarketEta(best.time, now)}`
       : 'Best price next: N/A';
   });
+
+  if (!redrawCharts) return;
 
   RESOURCE_MARKET_RESOURCES.forEach((resourceKey) => {
     const chart = elements.charts[resourceKey];
@@ -1126,6 +1479,7 @@ function renderResourceMarketDayTable(modal, data, selectedDate) {
   const entries = getResourceMarketDayEntries(data, selectedDate);
   const lowFuelIndexes = getLowestResourceIndexes(entries, 'fuel', 3);
   const lowCo2Indexes = getLowestResourceIndexes(entries, 'co2', 3);
+  const currentSlotTime = getUtcResourcePriceSlot(new Date()).getTime();
 
   tbody.innerHTML = entries
     .map((entry, index) => {
@@ -1134,9 +1488,10 @@ function renderResourceMarketDayTable(modal, data, selectedDate) {
       const timeClass = isLowFuel || isLowCo2 ? ' class="am4-resource-market-low-time"' : '';
       const fuelClass = isLowFuel ? ' class="am4-resource-market-low"' : '';
       const co2Class = isLowCo2 ? ' class="am4-resource-market-low"' : '';
+      const rowClass = entry.time.getTime() === currentSlotTime ? ' class="am4-resource-market-current-row"' : '';
 
       return `
-        <tr>
+        <tr${rowClass}>
           <td${timeClass}>${formatResourcePriceTime(entry.time)}</td>
           <td${fuelClass}>${Number.isFinite(entry.fuel) ? `$${entry.fuel}` : 'N/A'}</td>
           <td${co2Class}>${Number.isFinite(entry.co2) ? `$${entry.co2}` : 'N/A'}</td>
@@ -1185,6 +1540,29 @@ function buildResourceMarketModal() {
       <div class="am4-resource-market-body">
         <div class="am4-resource-market-status">Loading resource market...</div>
         <div class="am4-resource-market-content" hidden>
+          <div class="am4-resource-market-summary">
+            <div class="am4-resource-market-summary-item">
+              <span class="am4-resource-market-summary-label">Current Fuel</span>
+              <span class="am4-resource-market-summary-value" data-current-resource="fuel">N/A</span>
+            </div>
+            <div class="am4-resource-market-summary-item">
+              <span class="am4-resource-market-summary-label">Current CO2</span>
+              <span class="am4-resource-market-summary-value" data-current-resource="co2">N/A</span>
+            </div>
+            <div class="am4-resource-market-summary-item">
+              <span class="am4-resource-market-summary-label">Slot Start</span>
+              <span class="am4-resource-market-summary-value" data-current-slot="start">N/A</span>
+            </div>
+            <div class="am4-resource-market-summary-item">
+              <span class="am4-resource-market-summary-label">Slot End</span>
+              <span class="am4-resource-market-summary-value" data-current-slot="end">N/A</span>
+            </div>
+          </div>
+          <div class="am4-resource-market-settings">
+            <label><input id="am4-resource-alert-enabled" type="checkbox"> Low-price alerts</label>
+            <label>Fuel threshold <input id="am4-resource-fuel-threshold" type="number" min="0" step="1"></label>
+            <label>CO2 threshold <input id="am4-resource-co2-threshold" type="number" min="0" step="1"></label>
+          </div>
           <div class="am4-resource-market-panel" data-panel="window">
             <div class="am4-resource-market-chart-header">
               <h3 class="am4-resource-market-chart-title">Fuel</h3>
@@ -1234,6 +1612,9 @@ function buildResourceMarketModal() {
   elements.tabs.forEach((tab) => {
     tab.addEventListener('click', () => activateResourceMarketTab(modal, tab.dataset.tab));
   });
+  [elements.alertEnabled, elements.fuelThreshold, elements.co2Threshold].forEach((input) => {
+    input.addEventListener('change', () => saveResourceMarketSettings(modal));
+  });
   modal.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
       closeResourceMarketModal();
@@ -1241,6 +1622,14 @@ function buildResourceMarketModal() {
   });
 
   document.body.appendChild(modal);
+  if (window.ResizeObserver) {
+    modal._am4ResourceMarketResizeObserver = new ResizeObserver(() => {
+      if (!modal.hidden && resourcePricesData && getActiveResourceMarketTab(modal) === 'window') {
+        window.requestAnimationFrame(() => renderResourceMarketWindow(modal, resourcePricesData));
+      }
+    });
+    modal._am4ResourceMarketResizeObserver.observe(modal.querySelector('.am4-resource-market-window'));
+  }
   return modal;
 }
 
@@ -1249,9 +1638,13 @@ function closeResourceMarketModal() {
   if (!modal) return;
 
   modal.hidden = true;
-  if (window._am4ResourceMarketTimer) {
-    window.clearInterval(window._am4ResourceMarketTimer);
-    window._am4ResourceMarketTimer = null;
+  if (window._am4ResourceMarketCountdownTimer) {
+    window.clearInterval(window._am4ResourceMarketCountdownTimer);
+    window._am4ResourceMarketCountdownTimer = null;
+  }
+  if (window._am4ResourceMarketChartTimer) {
+    window.clearInterval(window._am4ResourceMarketChartTimer);
+    window._am4ResourceMarketChartTimer = null;
   }
 }
 
@@ -1276,18 +1669,27 @@ function openResourceMarketModal() {
       elements.dateInput.onchange = renderDay;
       elements.status.hidden = true;
       elements.content.hidden = false;
+      renderResourceMarketSettings(modal);
       activateResourceMarketTab(modal, getActiveResourceMarketTab(modal));
       renderResourceMarketWindow(modal, data);
       renderDay();
 
-      if (window._am4ResourceMarketTimer) {
-        window.clearInterval(window._am4ResourceMarketTimer);
+      if (window._am4ResourceMarketCountdownTimer) {
+        window.clearInterval(window._am4ResourceMarketCountdownTimer);
       }
-      window._am4ResourceMarketTimer = window.setInterval(() => {
+      if (window._am4ResourceMarketChartTimer) {
+        window.clearInterval(window._am4ResourceMarketChartTimer);
+      }
+      window._am4ResourceMarketCountdownTimer = window.setInterval(() => {
+        if (!modal.hidden && getActiveResourceMarketTab(modal) === 'window') {
+          renderResourceMarketWindow(modal, data, false);
+        }
+      }, 1000);
+      window._am4ResourceMarketChartTimer = window.setInterval(() => {
         if (!modal.hidden && getActiveResourceMarketTab(modal) === 'window') {
           renderResourceMarketWindow(modal, data);
         }
-      }, 1000);
+      }, 60 * 1000);
     })
     .catch(() => {
       elements.status.textContent = 'Resource market unavailable.';
@@ -1301,13 +1703,13 @@ function browserNotifications() {
   const notify = (message) => {
     if (window.Notification && Notification.permission === 'granted') {
       new Notification(message, { icon: 'https://www.airlinemanager.com/favicon.ico' });
-      notificationSound.play();
+      notificationSound.play().catch(() => {});
     }
   };
 
   const observeList = (listId, action) => {
     const list = document.querySelector(listId);
-    if (!list) return;
+    if (!list || list.dataset.browserNotificationsBound) return;
 
     const observer = new MutationObserver((mutationsList) => {
       mutationsList.forEach((mutation) => {
@@ -1321,6 +1723,7 @@ function browserNotifications() {
       });
     });
     observer.observe(list, { childList: true });
+    list.dataset.browserNotificationsBound = 'true';
   };
 
   observeList('#landedList', 'landed');
@@ -1334,7 +1737,7 @@ function soundEffects() {
   buttons.forEach((button) => {
     if (button.dataset.hasTakeoffSound) return;
     button.addEventListener('click', () => {
-      takeoffSound.play();
+      takeoffSound.play().catch(() => {});
     });
     button.dataset.hasTakeoffSound = 'true';
   });
@@ -1346,8 +1749,8 @@ function soundEffects() {
  */
 function sortElementsByDataset(elements, key, direction) {
   return elements.sort((a, b) => {
-    const valA = a.dataset[key];
-    const valB = b.dataset[key];
+    const valA = a.dataset[key] ?? '';
+    const valB = b.dataset[key] ?? '';
 
     const isNumericA = !isNaN(parseFloat(valA)) && isFinite(valA);
     const isNumericB = !isNaN(parseFloat(valB)) && isFinite(valB);
@@ -1363,7 +1766,15 @@ function sortElementsByDataset(elements, key, direction) {
 (function () {
   console.log('Starting AM4 Usability & Immersion');
 
-  const observerCallback = () => {
+  const runSafely = (name, fn) => {
+    try {
+      fn();
+    } catch (error) {
+      console.error(`AM4 enhancement failed: ${name}`, error);
+    }
+  };
+
+  const runEnhancements = () => {
     // play startup sound
     if (!window._am4StartupSoundPlayed) {
       startupSound
@@ -1377,17 +1788,29 @@ function sortElementsByDataset(elements, key, direction) {
       Notification.requestPermission().catch((e) => {});
     }
 
-    hideGameAds();
-    betterAutoPrice();
-    customLiveries();
-    orderScreenEnhancements();
-    hubScreenEnhancements();
-    maintenanceScreenEnhancements();
-    navbarEnhancements();
-    soundEffects();
+    runSafely('hideGameAds', hideGameAds);
+    runSafely('betterAutoPrice', betterAutoPrice);
+    runSafely('customLiveries', customLiveries);
+    runSafely('orderScreenEnhancements', orderScreenEnhancements);
+    runSafely('hubScreenEnhancements', hubScreenEnhancements);
+    runSafely('maintenanceScreenEnhancements', maintenanceScreenEnhancements);
+    runSafely('navbarEnhancements', navbarEnhancements);
+    runSafely('soundEffects', soundEffects);
+    runSafely('browserNotifications', browserNotifications);
+    runSafely('resourcePriceAlerts', resourcePriceAlerts);
   };
-  new MutationObserver(observerCallback).observe(document.body, { childList: true, subtree: true });
-  observerCallback();
 
-  browserNotifications();
+  let enhancementQueued = false;
+  const queueEnhancements = () => {
+    if (enhancementQueued) return;
+
+    enhancementQueued = true;
+    window.requestAnimationFrame(() => {
+      enhancementQueued = false;
+      runEnhancements();
+    });
+  };
+
+  new MutationObserver(queueEnhancements).observe(document.body, { childList: true, subtree: true });
+  queueEnhancements();
 })();
