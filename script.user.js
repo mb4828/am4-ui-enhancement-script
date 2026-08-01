@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AM4 UI Enhancements
 // @namespace    http://tampermonkey.net/
-// @version      1.4
+// @version      1.5
 // @description  Usability and Immersion improvements for Airline Manager 4
 // @author       matt@mattbrauner.com
 // @match        https://www.airlinemanager.com/*
@@ -15,13 +15,13 @@
 'use strict';
 
 const startupSound = new Audio(
-  'https://raw.githubusercontent.com/mb4828/am4-ui-enhancement-script/main/sounds/ding-long.mp3'
+  'https://raw.githubusercontent.com/mb4828/am4-ui-enhancement-script/main/sounds/ding-long.mp3',
 );
 const notificationSound = new Audio(
-  'https://raw.githubusercontent.com/mb4828/am4-ui-enhancement-script/main/sounds/ding-short.mp3'
+  'https://raw.githubusercontent.com/mb4828/am4-ui-enhancement-script/main/sounds/ding-short.mp3',
 );
 const takeoffSound = new Audio(
-  'https://raw.githubusercontent.com/mb4828/am4-ui-enhancement-script/main/sounds/takeoff.mp3'
+  'https://raw.githubusercontent.com/mb4828/am4-ui-enhancement-script/main/sounds/takeoff.mp3',
 );
 startupSound.volume = 0.1;
 notificationSound.volume = 0.1;
@@ -62,7 +62,9 @@ function getBetterAutoPriceOnclick(cmd) {
 }
 
 function betterAutoPrice() {
-  const autoPriceButtons = document.querySelectorAll('button[onclick*="ticketPriceSuggest"], button[onclick*="autoPrice"]');
+  const autoPriceButtons = document.querySelectorAll(
+    'button[onclick*="ticketPriceSuggest"], button[onclick*="autoPrice"]',
+  );
 
   autoPriceButtons.forEach((autoPriceButton) => {
     if (autoPriceButton.dataset.hasBetterAutoPrice) return;
@@ -483,7 +485,7 @@ function maintenanceScreenEnhancements() {
         'beforeend',
         `<button class="btn btn-xs-real btn-outline-dark" onclick="closePop(); showFlightInfo(this, '${aircraftId}', 7);">
            <span class="glyphicons glyphicons-map-marker"></span> Locate
-         </button>`
+         </button>`,
       );
     }
 
